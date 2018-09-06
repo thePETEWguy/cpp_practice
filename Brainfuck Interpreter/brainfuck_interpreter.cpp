@@ -5,6 +5,9 @@
 #include <Windows.h>
 
 #define MEM_SIZE 30000
+#define RED FOREGROUND_RED
+#define WHITE FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+
 
 class MemoryError : public std::exception {
 public:
@@ -17,17 +20,46 @@ private:
     std::string _errorMsg;
 };
 
-void setCharacterColor(int color) {
+void setOutputColor(int color) {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
 
+void interpret(bool withSteps);
+
+void showMenu() {
+	int item = 0;
+	do {
+		system("cls");
+		setOutputColor(RED);
+		std::cout << "\n\n\n\n\n\n\n\n\n\t\t\t\t\t    BRAINFUCK INTERPRETER\t\t\n\n\n";
+
+		(!item) ? setOutputColor(WHITE) : setOutputColor(RED);
+		std::cout << "\t\t\t\t\t   INTERPRET SHOWING STEPS\n\n";
+
+		(!item) ? setOutputColor(RED) : setOutputColor(WHITE);
+		std::cout << "\t\t\t\t\tINTERPRET SHOWING OUTPUT ONLY\n";
+
+		if (GetAsyncKeyState(VK_DOWN) < 0) {
+			if (!item)
+				item++;
+		}
+		else if (GetAsyncKeyState(VK_UP) < 0) {
+			if (item)
+				item--;
+		}
+		Sleep(25);
+	} while (GetAsyncKeyState(VK_RETURN) >= 0);
+
+	(!item) ? interpret(true) : interpret(false);
+}
+
 void printCode(unsigned currChar, const std::string& code) {
-	for (int i = 0; i < code.length(); i++) {
+	for (unsigned i = 0; i < code.length(); i++) {
 		if (i != currChar) {
-			setCharacterColor(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // WHITE
+			setOutputColor(WHITE); // WHITE
 		}
 		else {
-			setCharacterColor(FOREGROUND_RED); // RED
+			setOutputColor(RED); // RED
 		}
 		std::cout << code[i];
 	}
@@ -42,25 +74,32 @@ void printTenCells(const std::string& code, unsigned currChar, const std::string
 
 	for (int i = 0; i < 10; i++) {
 		if (i == cell) {
-			setCharacterColor(FOREGROUND_RED);
+			setOutputColor(FOREGROUND_RED);
 		}
 		else {
-			setCharacterColor(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+			setOutputColor(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 		}
 		std::cout << (int)mem[i] << " ";
 	}
 	std::cout << "\n";
 }
 
-void interpret(std::string code){
+void interpret(bool withSteps){
+	std::string code;
     std::vector<unsigned char> mem(MEM_SIZE, 0);
     std::stack<int> positionStack;
 	std::string output = "";
 	int cell = 0;
-	int loopStart = 0, loopEnd = 0;
 
-	printTenCells(code, 0, output, cell, mem);
-	std::cin.get();
+	std::cin.ignore();
+	setOutputColor(WHITE);
+	std::cout << "INPUT: ";
+	std::cin >> code;
+
+	if (withSteps) {
+		printTenCells(code, 0, output, cell, mem);
+		std::cin.get();
+	}
 
     for (unsigned i = 0; i < code.length(); i++){
         switch (code[i]){
@@ -81,22 +120,29 @@ void interpret(std::string code){
                 mem[cell]--;
                 break;
             case '[':
-				loopStart++;
 				if (mem[cell] == 0) { // the data in that cell = 0
-					while (code[i++] != ']');
+					int loopStart = 1;
+					int loopEnd = 0;
+					do {
+						if (code[i] == '[')
+							loopStart++;
+						else if (code[i] == ']')
+							loopEnd++;
+						i++;
+					} while (loopStart != loopEnd);
+					i--;
+					while (code[--i] != ']');
 				}
 				else { // cell data != 0
 					positionStack.push(i);
 				}
                 break;
             case ']':
-				loopEnd++;
 				if (mem[cell] != 0) {
 					i = positionStack.top();
 				}
 				else {
-					if (loopStart - loopEnd == 0)
-						positionStack.pop();
+					positionStack.pop();
 				}
                 break;
             case ',':
@@ -109,20 +155,21 @@ void interpret(std::string code){
             default:
                 break;
         }
-		printTenCells(code, i, output, cell, mem);
-		//std::cin.get();
+		if (withSteps) {
+			printTenCells(code, i, output, cell, mem);
+			std::cin.get();
+		}
     }
+
+	if (!withSteps) {
+		setOutputColor(RED);
+		std::cin.ignore();
+		std::cout << "OUTPUT: " << output << "\n";
+	}
 }
 
 int main(){
-	std::string code;
-
-    try {
-		std::cin >> code;
-		interpret(code);
-    } catch (MemoryError memError){
-        std::cout << memError.what() << "\n";
-    }
+	showMenu();
 
 	std::cin.ignore();
 	std::cin.get();
