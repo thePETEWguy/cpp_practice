@@ -11,13 +11,13 @@
 
 class MemoryError : public std::exception {
 public:
-    MemoryError(const std::string& errorMsg) : _errorMsg(errorMsg){}
+	MemoryError(const std::string& errorMsg) : _errorMsg(errorMsg) {}
 
-    virtual const char* what() const noexcept override {
-        return _errorMsg.c_str();
-    }
+	virtual const char* what() const noexcept override {
+		return _errorMsg.c_str();
+	}
 private:
-    std::string _errorMsg;
+	std::string _errorMsg;
 };
 
 void setOutputColor(int color) {
@@ -84,10 +84,10 @@ void printTenCells(const std::string& code, unsigned currChar, const std::string
 	std::cout << "\n";
 }
 
-void interpret(bool withSteps){
+void interpret(bool withSteps) {
 	std::string code;
-    std::vector<unsigned char> mem(MEM_SIZE, 0);
-    std::stack<int> positionStack;
+	std::vector<unsigned char> mem(MEM_SIZE, 0);
+	std::stack<int> positionStack;
 	std::string output = "";
 	int cell = 0;
 
@@ -101,77 +101,74 @@ void interpret(bool withSteps){
 		std::cin.get();
 	}
 
-    for (unsigned i = 0; i < code.length(); i++){
-        switch (code[i]){
-            case '>':
-                cell++;
-                if (cell > MEM_SIZE)
-                    throw MemoryError("Error! Current cell # > 30000");
-                break;
-            case '<':
-                cell--;
-                if (cell < 0)
-                    throw MemoryError("Error! Current cell # < 0");
-                break;
-            case '+':
-                mem[cell]++;
-                break;
-            case '-':
-                mem[cell]--;
-                break;
-            case '[':
-				if (mem[cell] == 0) { // the data in that cell = 0
-					int loopStart = 1;
-					int loopEnd = 0;
-					do {
-						if (code[i] == '[')
-							loopStart++;
-						else if (code[i] == ']')
-							loopEnd++;
-						i++;
-					} while (loopStart != loopEnd);
-					i--;
-					while (code[--i] != ']');
-				}
-				else { // cell data != 0
-					positionStack.push(i);
-				}
-                break;
-            case ']':
-				if (mem[cell] != 0) {
-					i = positionStack.top();
-				}
-				else {
-					positionStack.pop();
-				}
-                break;
-            case ',':
-				std::cin.ignore(); // in order to escape the newline character that stays in the buffer
-				mem[cell] = std::cin.get();
-                break;
-            case '.':
-				output += mem[cell];
-                break;
-            default:
-                break;
-        }
+	for (unsigned i = 0; i < code.length(); i++) {
+		switch (code[i]) {
+		case '>':
+			cell++;
+			if (cell > MEM_SIZE)
+				throw MemoryError("Error! Current cell # > 30000");
+			break;
+		case '<':
+			cell--;
+			if (cell < 0)
+				throw MemoryError("Error! Current cell # < 0");
+			break;
+		case '+':
+			mem[cell]++;
+			break;
+		case '-':
+			mem[cell]--;
+			break;
+		case '[':
+			if (mem[cell] != 0)
+				positionStack.push(i);
+			else {
+				int loopStart = 1;
+				int loopEnd = 0;
+
+				do {
+					i++;
+					if (code[i] == '[')
+						loopStart++;
+					else if (code[i] == ']')
+						loopEnd++;
+				} while (loopStart != loopEnd);
+			}
+			break;
+		case ']':
+			if (mem[cell] != 0) {
+				i = positionStack.top();
+			}
+			else {
+				positionStack.pop();
+			}
+			break;
+		case ',':
+			std::cin.ignore(); // in order to escape the newline character that stays in the buffer
+			mem[cell] = std::cin.get();
+			break;
+		case '.':
+			output += mem[cell];
+			break;
+		default:
+			break;
+		}
 		if (withSteps) {
 			printTenCells(code, i, output, cell, mem);
 			std::cin.get();
 		}
-    }
+	}
 
 	if (!withSteps) {
 		setOutputColor(RED);
-		std::cin.ignore();
 		std::cout << "OUTPUT: " << output << "\n";
 	}
 }
 
-int main(){
+int main() {
 	showMenu();
 
 	std::cin.ignore();
 	std::cin.get();
-    return 0;
+	return 0;
 }
