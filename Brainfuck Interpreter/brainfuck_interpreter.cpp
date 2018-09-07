@@ -66,13 +66,15 @@ void printCode(unsigned currChar, const std::string& code) {
 	std::cout << "\n";
 }
 
-void printTenCells(const std::string& code, unsigned currChar, const std::string& output, const int cell, const std::vector<unsigned char>& mem) {
+void printWorkingCells(const std::string& code, unsigned currChar, const std::string& output, const int cell, const std::vector<unsigned char>& mem) {
 	system("cls");
 	printCode(currChar, code);
 
 	std::cout << "OUTPUT: " << output << "\n";
 
-	for (int i = 0; i < 10; i++) {
+	int cellsToPrint = (cell > 10) ? cell : 10;
+
+	for (int i = 0; i < cellsToPrint; i++) {
 		if (i == cell) {
 			setOutputColor(FOREGROUND_RED);
 		}
@@ -97,7 +99,7 @@ void interpret(bool withSteps) {
 	std::cin >> code;
 
 	if (withSteps) {
-		printTenCells(code, 0, output, cell, mem);
+		printWorkingCells(code, 0, output, cell, mem);
 		std::cin.get();
 	}
 
@@ -154,13 +156,14 @@ void interpret(bool withSteps) {
 			break;
 		}
 		if (withSteps) {
-			printTenCells(code, i, output, cell, mem);
+			printWorkingCells(code, i, output, cell, mem);
 			std::cin.get();
 		}
 	}
 
 	if (!withSteps) {
 		setOutputColor(RED);
+		std::cin.ignore();
 		std::cout << "OUTPUT: " << output << "\n";
 	}
 }
